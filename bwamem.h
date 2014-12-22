@@ -44,6 +44,7 @@ typedef struct {
 	int max_ins;            // when estimating insert size distribution, skip pairs with insert longer than this value
 	int max_matesw;         // perform maximally max_matesw rounds of mate-SW for each end
 	int8_t mat[25];         // scoring matrix; mat[0] == 0 if unset
+	int use_mmap;           // use mmap to access index files
 } mem_opt_t;
 
 typedef struct {
