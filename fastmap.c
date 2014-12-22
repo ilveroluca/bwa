@@ -156,7 +156,7 @@ int main_mem(int argc, char *argv[])
 		if (opt0.pen_unpaired != 1) opt->pen_unpaired *= opt->a;
 	}
 	bwa_fill_scmat(opt->a, opt->b, opt->mat);
-	if ((idx = bwa_idx_load(argv[optind], BWA_IDX_ALL)) == 0) return 1; // FIXME: memory leak
+	if ((idx = bwa_idx_load(argv[optind], BWA_IDX_ALL, opt->use_mmap)) == 0) return 1; // FIXME: memory leak
 
 	ko = kopen(argv[optind + 1], &fd);
 	if (ko == 0) {
@@ -241,7 +241,7 @@ int main_fastmap(int argc, char *argv[])
 
 	fp = xzopen(argv[optind + 1], "r");
 	seq = kseq_init(fp);
-	if ((idx = bwa_idx_load(argv[optind], BWA_IDX_BWT|BWA_IDX_BNS)) == 0) return 1;
+	if ((idx = bwa_idx_load(argv[optind], BWA_IDX_BWT|BWA_IDX_BNS, 0)) == 0) return 1;
 	itr = smem_itr_init(idx->bwt);
 	while (kseq_read(seq) >= 0) {
 		err_printf("SQ\t%s\t%ld", seq->name.s, seq->seq.l);

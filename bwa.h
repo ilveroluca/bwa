@@ -37,9 +37,9 @@ extern "C" {
 	int bwa_fix_xref2(const int8_t mat[25], int o_del, int e_del, int o_ins, int e_ins, int w, const bntseq_t *bns, const uint8_t *pac, uint8_t *query, int *qb, int *qe, int64_t *rb, int64_t *re);
 
 	char *bwa_idx_infer_prefix(const char *hint);
-	bwt_t *bwa_idx_load_bwt(const char *hint);
+	bwt_t *bwa_idx_load_bwt(const char *hint, int use_mmap);
 
-	bwaidx_t *bwa_idx_load(const char *hint, int which);
+	bwaidx_t *bwa_idx_load(const char *hint, int which, int use_mmap);
 	void bwa_idx_destroy(bwaidx_t *idx);
 
 	void bwa_print_sam_hdr(const bntseq_t *bns, const char *rg_line);
