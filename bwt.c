@@ -406,6 +406,7 @@ void* bwt_ro_mmap_file(const char *fn, size_t size)
 	int map_flags = MAP_PRIVATE | MAP_POPULATE | MAP_NORESERVE | MAP_LOCKED;
 	void* m = bwt_mmap_file(fn, size, PROT_READ, map_flags);
 	fprintf(stderr, "File %s locked in memory\n", fn);
+	madvise(m, size, MADV_WILLNEED);
 
 	return m;
 }
