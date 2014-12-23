@@ -42,7 +42,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-//#include <unistd.h>
+#include <errno.h>
 
 void bwt_gen_cnt_table(bwt_t *bwt)
 {
@@ -370,8 +370,10 @@ void* bwt_mmap_file(const char *fn, size_t size, int protection, int flags)
 	fprintf(stderr, "mmapping file %s (%0.1fMB)\n", fn, ((double)st_size) / (1024*1024));
 	void* m = mmap(0, st_size, protection, flags, fd, 0);
 	if (m == MAP_FAILED) {
-		perror(__func__);
-		err_fatal("Failed to mmap file ", fn);
+		err_fatal(__func__, "Failed to mmap file %s: %s\n"
+		  "\nMaybe your system has insufficient free RAM, or you need to raise your\n"
+			"max locked memory limit (see what 'ulimit -l' says).",
+		   __func__, fn, strerror(errno));
 	}
 	close(fd);
 
