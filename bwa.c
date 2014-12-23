@@ -7,6 +7,7 @@
 #include "ksw.h"
 #include "utils.h"
 #include "kstring.h"
+#include "bwt.h"
 
 #ifdef USE_MALLOC_WRAPPERS
 #  include "malloc_wrap.h"
@@ -274,6 +275,14 @@ bwt_t *bwa_idx_load_bwt(const char *hint, int use_mmap)
 	return bwt;
 }
 
+void* bwa_load_pac_mmap(const char* prefix)
+{
+	char pac_filename[1024];
+	strcat(strcpy(pac_filename, prefix), ".pac");
+
+	return bwt_ro_mmap_file(pac_filename, 0);
+}
+
 bwaidx_t *bwa_idx_load(const char *hint, int which, int use_mmap)
 {
 	bwaidx_t *idx;
@@ -288,8 +297,14 @@ bwaidx_t *bwa_idx_load(const char *hint, int which, int use_mmap)
 	if (which & BWA_IDX_BNS) {
 		idx->bns = bns_restore(prefix);
 		if (which & BWA_IDX_PAC) {
-			idx->pac = calloc(idx->bns->l_pac/4+1, 1);
-			err_fread_noeof(idx->pac, 1, idx->bns->l_pac/4+1, idx->bns->fp_pac); // concatenated 2-bit encoded sequence
+			if (use_mmap) {
+				idx->pac_mmap = bwa_load_pac_mmap(prefix);
+				idx->pac = (uint8_t*)idx->pac_mmap;
+			}
+			else {
+				idx->pac = calloc(idx->bns->l_pac/4+1, 1);
+				err_fread_noeof(idx->pac, 1, idx->bns->l_pac/4+1, idx->bns->fp_pac); // concatenated 2-bit encoded sequence
+			}
 			err_fclose(idx->bns->fp_pac);
 			idx->bns->fp_pac = 0;
 		}
@@ -302,8 +317,16 @@ void bwa_idx_destroy(bwaidx_t *idx)
 {
 	if (idx == 0) return;
 	if (idx->bwt) bwt_destroy(idx->bwt);
+	if (idx->pac) {
+		if (idx->pac_mmap) {
+			fprintf(stderr, "Unmapping idx->pac_mmap\n");
+			bwt_unmap_file(idx->pac_mmap, idx->bns->l_pac/4+1);
+		}
+		else
+			free(idx->pac);
+	}
+	idx->pac = NULL;
 	if (idx->bns) bns_destroy(idx->bns);
-	if (idx->pac) free(idx->pac);
 	free(idx);
 }
 

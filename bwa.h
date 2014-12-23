@@ -14,6 +14,7 @@ typedef struct {
 	bwt_t    *bwt; // FM-index
 	bntseq_t *bns; // information on the reference sequences
 	uint8_t  *pac; // the actual 2-bit encoded reference sequences with 'N' converted to a random base
+	void     *pac_mmap; // ptr to memory-mapped pac file (if mmap is being used)
 } bwaidx_t;
 
 typedef struct {
