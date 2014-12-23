@@ -393,13 +393,16 @@ void* bwt_mmap_file(const char *fn, size_t size, int protection, int flags)
 void* bwt_ro_mmap_file(const char *fn, size_t size)
 {
 	// mmap flags:
-	// MAP_PRIVATE: copy-on-write mapping. Writes not propagated to file. Our mapping is read-only,
-	//              so this setting seems natural.
+	// MAP_PRIVATE: copy-on-write mapping. Writes not propagated to file.
 	// MAP_POPULATE: prefault page tables for mapping.  Use read-ahead. Only supported for MAP_PRIVATE
 	// MAP_HUGETLB: use huge pages.  Manual says it's only supported since kernel ver. 2.6.32
 	//              and requires special system configuration.
 	// MAP_NORESERVE: don't reserve swap space
 	// MAP_LOCKED:  Lock the pages of the mapped region into memory in the manner of mlock(2)
+	//              Because we try to lock the pages in memory, this call will fail if the system
+	//              doesn't have sufficient physical memory.  However, without locking, if the
+	//              system can't quite fit the reference the call to mmap will succeed but aligning
+	//              will take forever as parts of the reference are evicted and/or reloaded from disk.
 	int map_flags = MAP_PRIVATE | MAP_POPULATE | MAP_NORESERVE | MAP_LOCKED;
 	void* m = bwt_mmap_file(fn, size, PROT_READ, map_flags);
 	fprintf(stderr, "File %s locked in memory\n", fn);
@@ -481,7 +484,6 @@ void bwt_restore_sa_mmap(const char *fn, bwt_t *bwt)
 	 *     seq_len:  bwtint_t
 	 *     suffix_array: bwtint_t[]
 	 */
-
 	bwt->sa_mmap = bwt_ro_mmap_file(fn, 0);
 
 	bwtint_t* array = (bwtint_t*)bwt->sa_mmap;
